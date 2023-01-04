@@ -35,6 +35,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"nipplejs": "^0.10.0",
 		"svelte-viewport-info": "^1.0.0"
 	}
 }
