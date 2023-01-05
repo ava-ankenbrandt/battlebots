@@ -5,42 +5,54 @@
 	import Sidebuttons from '$lib/components/sidebuttons.svelte';
 	import Fourbuttonpad from '$lib/components/fourbuttonpad.svelte';
 	import Joystick from '$lib/components/joystick.svelte';
+	import Connectionsmodal from '$lib/components/connectionsmodal.svelte';
+    import { joystick_mode } from '$lib/javascript/settingsStores';
+	// import { WatchdogMessage, websocket_manager } from '$lib/javascript/websocket_manager';
 
     let windowWidth: number;
     let windowHeight: number;
 
-    function handleClick() { 
-        alert('clicked!!!!');
-    }
+    let isFocused = true;
 
     function rotateAlert() {
         alert('Please use landscape mode!');
     }
 
-    let isSettingsOpen = false
+    let isSettingsOpen = false;
+    let isConnectionsOpen = false;
 
     onMount(() => {
 		if (windowWidth < windowHeight) {
             rotateAlert();
         }
 	});
+
+    setInterval(() => {
+        if (isFocused === true) {
+            // websocket_manager.send_command(new WatchdogMessage());
+        }
+    }, 1000)
+
 </script>
 
-<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight}/>
+<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} on:blur={() => {isFocused = false}} on:focus={() => {isFocused = true}}/>
 
 
-<Settingsmodal bind:settingsOpen={isSettingsOpen}></Settingsmodal>
-
+<Settingsmodal bind:settingsOpen={isSettingsOpen}/>
+<Connectionsmodal bind:connectionsOpen={isConnectionsOpen}/>
 
 <body>
 
-<div class="flex w-[98vw] h-[100vh]">
-    <Joystick></Joystick>
-    <!-- <Dpad></Dpad> -->
+<div class="flex w-[98vw] h-[100vh] select-none">
+    {#if ($joystick_mode === "joystick")}
+    <Joystick/>
+    {:else}
+    <Dpad/>
+    {/if}
     
-    <Fourbuttonpad></Fourbuttonpad>
+    <Fourbuttonpad/>
 
-    <Sidebuttons bind:settingsOpen={isSettingsOpen}></Sidebuttons>
+    <Sidebuttons bind:settingsOpen={isSettingsOpen} bind:connectionsOpen={isConnectionsOpen}/>
 
 </div>
     
