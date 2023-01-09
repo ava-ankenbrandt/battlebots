@@ -18,6 +18,6 @@ export const reverse_L = new PersistentStore<boolean>("reverse_L", false);
 export const reverse_R = new PersistentStore<boolean>("reverse_R", false);
 export const switch_L_R_defs = new PersistentStore<boolean>("switch_L_R_defs", false);
 
-export const reverse_SA = new PersistentStore<boolean>("reverse_SA", false);
-export const reverse_SB = new PersistentStore<boolean>("reverse_SB", false);
+export const reverse_S1 = new PersistentStore<boolean>("reverse_S1", false);
+export const reverse_S2 = new PersistentStore<boolean>("reverse_S2", false);
 

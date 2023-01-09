@@ -6,6 +6,8 @@
     import { reverse_A, reverse_B, a_b_mode, a_b_reverse, servo_mode } from "$lib/javascript/settingsStores";
     // please remember that capital A and B are outputs and lowercase a and b are buttons
 
+	import { PwmMessage, websocket_manager } from '$lib/javascript/websocket_manager';
+
     let x_tracker = new ButtonTracker("X")
     let y_tracker = new ButtonTracker("Y")
     let a_tracker = new ButtonTracker("A")
@@ -21,6 +23,8 @@
     interface OutputValues {
         A_out: number;
         B_out: number;
+        X_out: number; // x_out and y_out are fake, they don't go anywhere, they're just used for button graphics lol
+        Y_out: number;
     }
 
     const buttons: ButtonProps[] = [
@@ -50,11 +54,11 @@
         }
     ]
 
-    let output_values: OutputValues = {A_out: 0, B_out: 0};
+    let output_values: OutputValues = {A_out: 0, B_out: 0, X_out: 0, Y_out: 0};
 
     let last_A_state = false;
     let last_B_state = false;
-
+    
 
     $:{
         if ($a_b_mode === "toggle") { // default mode. Assumes you'll want to turn a motor on and leave it on.
@@ -83,10 +87,19 @@
                 // TODO: disable horn and servos in this case.
             }
         }
-        if ($reverse_A === true) { output_values.A_out *= -1; }
-        if ($reverse_B === true) { output_values.B_out *= -1; }
         console.log("--")
         console.log(output_values);
+
+        output_values.X_out = $x_tracker ? 255 : 0;
+        output_values.Y_out = $y_tracker ? 255 : 0; // TODO: fix errors with multitouch on these buttons in hold->xy/ab reverse mode
+        // for some reason in that case specifically the buttons are mutually exclusive?
+
+        if ($reverse_A === true) {output_values.A_out *= -1;}
+        if ($reverse_B === true) {output_values.B_out *= -1;}
+
+        websocket_manager.send_command(new PwmMessage(1, output_values.A_out))
+        websocket_manager.send_command(new PwmMessage(2, output_values.B_out))
+
     }
     
 </script>

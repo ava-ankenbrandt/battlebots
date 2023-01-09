@@ -3,10 +3,11 @@
  * 
  * There are 4 types of signals being sent:
  * 1. Watchdog `W` - every x seconds. If wathdog is missed for some time, turn everything off
- * 2. PWM `P<channel_id> V<power, -255:255>` - PWM signal for a specific channel. 
- *      Positive is forward, negitave is backwards.
+ * 2. PWM `P<channel_id> V<power, -255:255>` - PWM signal for a specific channel.
+ *      L: 1, R: 2, A: 3, B: 4
+ *      Positive is forward, negative is backwards.
  * 3. Servo Control `S<channel_id> A<0-180 degrees>` - Servo control value
- * 4. Note `N<tone, 1-15, 0 is no sound> D<duration, miliseconds>` - A single note. 
+ * 4. Note `N<tone, 01-15, 00 is no sound> D<duration, miliseconds>` - A single note. 
  *      These are dumped into a buffer and played back.
  */
 
@@ -35,7 +36,7 @@ export class WatchdogMessage implements Message {
   }
 }
 
-export class PwmMessage implements Message {
+export class PwmMessage implements Message { // TODO: check setting and *-1 if it's set
   private power: string;
   private channel_id: string;
 
@@ -46,9 +47,10 @@ export class PwmMessage implements Message {
     if (!Number.isInteger(power)) {
       throw new Error("PWM power is not integer")
     }
+    power = power + 255; // now always positive :)
 
-    this.power = power.toString()
-    this.channel_id = channel_id.toString();
+    this.power = power.toString().padStart(3, '0');
+    this.channel_id = channel_id.toString().padStart(2, '0');
   }
 
   to_string(): string {
@@ -112,5 +114,5 @@ export class WebsocketManager implements Readable<boolean> {
   }
 }
 
-export const websocket_manager = new WebsocketManager(`ws://${window.location.hostname}/ws`);
-// export const websocket_manager = new WebsocketManager(`ws://10.10.1.1/ws`);
+export const websocket_manager = new WebsocketManager(`ws://100.70.210.59/ws`); // running on the laptop
+// export const websocket_manager = new WebsocketManager(`ws://10.10.1.1/ws`); // running on the phone/esp32 combo

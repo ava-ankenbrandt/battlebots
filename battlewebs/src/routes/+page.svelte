@@ -7,7 +7,7 @@
 	import Joystick from '$lib/components/joystick.svelte';
 	import Connectionsmodal from '$lib/components/connectionsmodal.svelte';
     import { joystick_mode } from '$lib/javascript/settingsStores';
-	// import { WatchdogMessage, websocket_manager } from '$lib/javascript/websocket_manager';
+	import { WatchdogMessage, websocket_manager } from '$lib/javascript/websocket_manager';
 
     let windowWidth: number;
     let windowHeight: number;
@@ -29,7 +29,7 @@
 
     setInterval(() => {
         if (isFocused === true) {
-            // websocket_manager.send_command(new WatchdogMessage());
+            websocket_manager.send_command(new WatchdogMessage());
         }
     }, 1000)
 

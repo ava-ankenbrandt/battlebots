@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import { PwmMessage, websocket_manager } from '$lib/javascript/websocket_manager';
+
     let isMounted = false;
     let x = 0;
     let y = 0;
@@ -8,9 +10,8 @@
 	let circd = 100;
 
     onMount(() => {
-
-        x = outerdiv.clientHeight/2 - circd/2;
-        y = outerdiv.clientHeight/2 - circd/2;
+        x = outerdiv.clientWidth/2 - circd/2;
+        y = outerdiv.clientWidth/2 - circd/2;
         isMounted = true;
     })
 
@@ -18,9 +19,16 @@
         if (isDragging === true) {
             x = event.clientX - circd/2;
             y = event.clientY - circd/2;
-            if (x + circd/2 > outerdiv.clientHeight) {
+            if (x + circd/2 > outerdiv.clientWidth) {
                 isDragging = false;
             }
+            let x_norm = (event.clientX - outerdiv.clientWidth / 2) / outerdiv.clientWidth * 512;
+            let y_norm = (event.clientY - outerdiv.clientWidth / 2) / outerdiv.clientWidth * -512;
+            // ^ origin is now bottom left, range of above is +-256 :)
+            let L_out = y_norm + x_norm;
+            let R_out = y_norm - x_norm;
+
+            // todo: send websocket requests
         }else{
             handleMouseUp()
         }
@@ -34,8 +42,9 @@
 
     function handleMouseUp() {
         isDragging = false;
-        x = outerdiv.clientHeight/2 - circd/2;
-        y = outerdiv.clientHeight/2 - circd/2;
+        x = outerdiv.clientWidth/2 - circd/2;
+        y = outerdiv.clientWidth/2 - circd/2;
+        // todo: send websocket request to halt motors
     }
 </script>
 
