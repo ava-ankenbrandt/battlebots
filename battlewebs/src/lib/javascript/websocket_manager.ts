@@ -7,8 +7,8 @@
  *      L: 1, R: 2, A: 3, B: 4
  *      Positive is forward, negative is backwards.
  * 3. Servo Control `S<channel_id> A<0-180 degrees>` - Servo control value
- * 4. Note `N<tone, 01-15, 00 is no sound> D<duration, miliseconds>` - A single note. 
- *      These are dumped into a buffer and played back.
+ * 4. Note `N<tone, 01-15, 00 is no sound> - A single note. These are played live as they're received.
+ *      if the watchdog times out, sound stops.
  */
 
 import { writable, type Readable, type Writable } from "svelte/store";
@@ -45,7 +45,7 @@ export class PwmMessage implements Message { // TODO: check setting and *-1 if i
     if (power > 255) {power = 255;}
     if (power < -255) { power = -255;}
     if (!Number.isInteger(power)) {
-      throw new Error("PWM power is not integer")
+      power = Math.round(power);
     }
     power = power + 255; // now always positive :)
 
@@ -62,15 +62,32 @@ export class PwmMessage implements Message { // TODO: check setting and *-1 if i
   }
 }
 
+export class HornMessage implements Message {
+  private note: string;
+  private useless = '000';
+
+  constructor(note: number) {
+    this.note = note.toString().padStart(2, '0');
+  }
+
+  to_string(): string {
+      return `N${this.note} U${this.useless}`;
+  }
+
+  get type(): MessageTypes {
+    return "NOTE";
+  }
+}
+
 export class WebsocketManager implements Readable<boolean> {
   private ws: WebSocket
   public subscribe: Writable<boolean>['subscribe'];
-  private store: Writable<boolean>;
+  private isConnectedStore: Writable<boolean>; // whether the connection is open
 
   constructor(private readonly connection_string: string) {
-    this.store = writable(false);
-    this.subscribe = this.store.subscribe;
-    this.ws = new WebSocket(this.connection_string)
+    this.isConnectedStore = writable(false);
+    this.subscribe = this.isConnectedStore.subscribe;
+    console.log(1, this.isConnectedStore);
 
     this.connect()
   }
@@ -78,27 +95,30 @@ export class WebsocketManager implements Readable<boolean> {
   private connect() {
     this.ws = new WebSocket(this.connection_string)
 
-    this.ws.addEventListener('open', this.on_open);
-    this.ws.addEventListener('close', this.on_close);
-    this.ws.addEventListener('message', this.on_message);
-    this.ws.addEventListener('error', this.on_error);
+    this.ws.addEventListener('open', this.on_open.bind(this));
+    this.ws.addEventListener('close', this.on_close.bind(this));
+    this.ws.addEventListener('message', this.on_message.bind(this));
+    this.ws.addEventListener('error', this.on_error.bind(this));
   }
 
   public send_command(command: Message) {
+    console.debug("sending ws message... " + command.to_string());
+    try {
     this.ws.send(command.to_string())
+    } catch (error) { console.error("failed to send ws message"); }
   }
 
   private on_open(e: WebSocketEventMap["open"]) {
     console.log("Websocket opened", e)
-    this.store.set(true);
+    this.isConnectedStore.set(true);
   }
 
   private on_close(e: WebSocketEventMap["close"]) {
     console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
-    this.store.set(false);
+    this.isConnectedStore.set(false);
     setTimeout(() => {
       this.connect()
-    }, 500);
+    }, 30000);
   }
 
   private on_message(e: WebSocketEventMap["message"]) {
@@ -107,12 +127,12 @@ export class WebsocketManager implements Readable<boolean> {
 
   private on_error(e: WebSocketEventMap["error"]) {
     console.error('Websocket error:', e)
-    this.store.set(false);
-    setTimeout(() => {
-      this.connect()
-    }, 500);
+    this.isConnectedStore.set(false);
+    // setTimeout(() => {
+    //   this.connect()
+    // }, 10000);
   }
 }
 
-export const websocket_manager = new WebsocketManager(`ws://100.70.210.59/ws`); // running on the laptop
+export const websocket_manager = new WebsocketManager(`ws://${window.location.hostname}/ws`); // running on the laptop
 // export const websocket_manager = new WebsocketManager(`ws://10.10.1.1/ws`); // running on the phone/esp32 combo

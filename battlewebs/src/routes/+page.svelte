@@ -8,6 +8,7 @@
 	import Connectionsmodal from '$lib/components/connectionsmodal.svelte';
     import { joystick_mode } from '$lib/javascript/settingsStores';
 	import { WatchdogMessage, websocket_manager } from '$lib/javascript/websocket_manager';
+	import Hornmodal from '$lib/components/hornmodal.svelte';
 
     let windowWidth: number;
     let windowHeight: number;
@@ -20,6 +21,7 @@
 
     let isSettingsOpen = false;
     let isConnectionsOpen = false;
+    let isHornOpen = false;
 
     onMount(() => {
 		if (windowWidth < windowHeight) {
@@ -38,8 +40,9 @@
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} on:blur={() => {isFocused = false}} on:focus={() => {isFocused = true}}/>
 
 
-<Settingsmodal bind:settingsOpen={isSettingsOpen}/>
+<Settingsmodal bind:settingsOpen={isSettingsOpen} bind:hornOpen={isHornOpen}/>
 <Connectionsmodal bind:connectionsOpen={isConnectionsOpen}/>
+<Hornmodal bind:hornOpen={isHornOpen}/>
 
 <body>
 

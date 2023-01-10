@@ -2,6 +2,7 @@
 	import Settingsmodalitem from "./settingsmodalitem.svelte";
   import { joystick_mode, joystick_modes, a_b_mode, a_b_modes, servo_mode, servo_modes, a_b_reverse, a_b_reverse_modes } from "$lib/javascript/settingsStores";
   export let settingsOpen: boolean;
+  export let hornOpen: boolean;
 
   let reverse_enabled: string[];
 
@@ -30,7 +31,7 @@
       <Settingsmodalitem title="Servo Mode" options={servo_modes} bind:selected={$servo_mode}/>
       
       <br>
-      <button class="btn">Configure Horn</button>
+      <button class="btn" on:click={() => {settingsOpen = false; hornOpen = true;}}>Configure Horn</button>
       <br><br><br>
       <button class="btn btn-accent">Reset All Settings</button>
       <div class="modal-action">

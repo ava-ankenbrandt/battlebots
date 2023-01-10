@@ -16,7 +16,7 @@
 #define L1C 2
 #define L2 13
 #define L2C 3
-#define B1 17
+#define B1a 17
 #define B1C 4
 #define B2 16
 #define B2C 5
@@ -27,8 +27,8 @@
 
 static const int S1 = 12;
 static const int S2 = 27;
-// static const int S3 = 26;
-// static const int S4 = 25;
+static const int S3 = 26;
+static const int S4 = 25;
 
 Servo Ser1;
 bool ser1WaitingForOff = false;
@@ -42,11 +42,18 @@ int ser2PressTime = 0;
 // Servo Ser4;
 // bool ser4WaitingForOff = false;
 // bool ser4PressTime = 0;
+#define HornC 15
+#define OCTS 3
+int hornDict[16][2] = {{0,0},{NOTE_C, OCTS},{NOTE_D, OCTS},{NOTE_E, OCTS},{NOTE_F, OCTS},{NOTE_G, OCTS},{NOTE_A, OCTS},{NOTE_B, OCTS},
+{NOTE_C, OCTS+1},{NOTE_D, OCTS+1},{NOTE_E, OCTS+1},{NOTE_F, OCTS+1},{NOTE_G, OCTS+1},{NOTE_A, OCTS+1},{NOTE_B, OCTS+1},{NOTE_C, OCTS+2}};
 
 
 // Replace with your network credentials
-const char* ssid = "REPLACE_WITH_YOUR_SSID";
-const char* password = "REPLACE_WITH_YOUR_PASSWORD";
+const char* ssid = "Pluto Nero";
+const char* password = "megafish";
+IPAddress IP = IPAddress(10, 10, 1, 1);
+IPAddress gateway = IPAddress(10, 10, 1, 1);
+IPAddress NMask = IPAddress(255, 255, 255, 0);
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
@@ -54,7 +61,7 @@ AsyncWebServer server(80);
 
 AsyncWebSocket ws("/ws");
 
-int watchdogRemaining = 0; // when this times out, stop all motors, change the rsl mode, and hold servos still.
+unsigned long watchdogRemaining = 0; // when this times out, stop all motors, change the rsl mode, and hold servos still.
 bool robotEnabled = false;
 bool RSLOn = false;
 
@@ -72,35 +79,56 @@ void initFS() {
 
 // Initialize WiFi
 void initWiFi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi ..");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print('.');
-    delay(1000);
-  }
-  Serial.println(WiFi.localIP());
+  WiFi.mode(WIFI_AP);
+  WiFi.softAPConfig(IP, IP, NMask);
+  WiFi.softAP(ssid);
 }
 
 void notifyClients(String sliderValues) {
   ws.textAll(sliderValues);
 }
 
-void updateRSL() {
-  if (robotEnabled) {
-    if ((millis() / 10) % 100 == 0) { // full-second blinks when robot on
-      RSLOn = !RSLOn;
-    }
-  }else{
-    if ((millis() / 10) % 30 == 0) { // 0.3-second fast blinks when robot off
-      RSLOn = !RSLOn;
-    }
+// note that these are PWM CHANNEL pins
+void driveMotor(int pin1, int pin2, int pwm) {
+  if (pwm > 255)
+    pwm = 255;
+  if (pwm < -255)
+    pwm = -255;
+  if (pwm == 0) {
+     ledcWrite(pin1, 0);
+     ledcWrite(pin2, 0);
   }
-  digitalWrite(RSL_LED, RSLOn);
+  if (pwm > 0) {
+     ledcWrite(pin2, 0);
+     ledcWrite(pin1, pwm);
+  }
+  if (pwm < 0) {
+     ledcWrite(pin1, 0);
+     ledcWrite(pin2, -pwm);
+  }
 }
 
-void resetWatchdog() {
-  watchdogRemaining = millis() + 5000;
+void stopHorn() {
+  ledcWriteTone(HornC, 0);
+}
+
+void handleNoteMessage(int webNote) { // webnotes aren't notes. We have to convert them to the ledc format.
+  if (webNote == 0) {
+    stopHorn();
+  }
+  int note = hornDict[webNote][0];
+  int oct = hornDict[webNote][1];
+  ledcWriteNote(HornC, (note_t)note, oct);
+  
+}
+
+void updateRSL() {
+  if (robotEnabled) {
+    RSLOn = (millis() / 1000) % 2;
+  }else{
+    RSLOn = (millis() / 200) % 2;
+  }
+  digitalWrite(RSL_LED, RSLOn);
 }
 
 void disableAllMotors() {
@@ -113,17 +141,21 @@ void disableAllMotors() {
 void watchdogAwoken() {
   robotEnabled = false;
   disableAllMotors();
+  stopHorn();
 }
 
 void watchdogAsleep() {
   robotEnabled = true;
 }
 
+void resetWatchdog() {
+  watchdogRemaining = millis() + 5000;
+  watchdogAsleep();
+}
+
 void checkWatchdog() {
-  if (watchdogRemaining - millis() < 0) {
+  if (watchdogRemaining < millis()) { // note that we have to manually put the dog back to sleep when we hear a W message
     watchdogAwoken();
-  }else{
-    watchdogAsleep();
   }
 }
 
@@ -140,8 +172,10 @@ void handlePWMMessage(int ch, int pwr) {
       break;
     case 4: //R
       driveMotor(R1C, R2C, pwr);
+      
       break;
     default:
+      break;
   }
 }
 
@@ -151,6 +185,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     data[len] = 0;
     incomingMsg = (char*)data;
     Serial.println(incomingMsg);
+    Serial.print("robot enabled? ");
+    Serial.println(robotEnabled);
     char msgType = incomingMsg.charAt(0);
 
     if (msgType == 'W') {
@@ -173,7 +209,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 
         break;
       case 'N': // play a note!
-
+        handleNoteMessage(parameter1);
         break;
       default:
         break;
@@ -217,8 +253,10 @@ void setupPinModes() {
   ledcAttachPin(L2, L2C);
   ledcAttachPin(A1, A1C);
   ledcAttachPin(A2, A2C);
-  ledcAttachPin(B1, B1C);
+  ledcAttachPin(B1a, B1C);
   ledcAttachPin(B2, B2C);
+
+  ledcAttachPin(S4, HornC);
 
   Ser1.attach(S1,8);
   Ser2.attach(S2,9);
@@ -231,29 +269,9 @@ void setupPinModes() {
   // Ser4.write(0);
 }
 
-// note that these are PWM CHANNEL pins
-void driveMotor(int pin1, int pin2, int pwm) {
-  if (pwm > 255)
-    pwm = 255;
-  if (pwm < -255)
-    pwm = -255;
-  if (pwm == 0) {
-     ledcWrite(pin1, 0);
-     ledcWrite(pin2, 0);
-  }
-  if (pwm > 0) {
-     ledcWrite(pin2, 0);
-     ledcWrite(pin1, pwm);
-  }
-  if (pwm < 0) {
-     ledcWrite(pin1, 0);
-     ledcWrite(pin2, -pwm);
-  }
-}
-
 void setup() {
   Serial.begin(115200);
-  
+  setupPinModes();
   initFS();
   initWiFi();
   initWebSocket();
@@ -271,5 +289,6 @@ void setup() {
 
 void loop() {
   checkWatchdog();
+  updateRSL();
   ws.cleanupClients();
 }

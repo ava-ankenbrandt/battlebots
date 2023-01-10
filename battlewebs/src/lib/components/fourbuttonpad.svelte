@@ -58,32 +58,35 @@
 
     let last_A_state = false;
     let last_B_state = false;
-    
 
     $:{
+
+        let revA = $reverse_A ? -1 : 0;
+        let revB = $reverse_B ? -1 : 0;
+
         if ($a_b_mode === "toggle") { // default mode. Assumes you'll want to turn a motor on and leave it on.
 
             if ($a_b_reverse === "none") {
                 if ($a_tracker === true) {
                     last_A_state = !last_A_state;
-                    output_values.A_out = last_A_state ? 255 : 0;
+                    output_values.A_out = (last_A_state ? 255 : 0) * revA;
                 }
                 if ($b_tracker === true) {
                     last_B_state = !last_B_state
-                    output_values.B_out = last_B_state ? 255 : 0;
+                    output_values.B_out = (last_B_state ? 255 : 0) * revB;
                 }
             }
 
         }else{ // hold mode. Hold down button to move motor. Useful for strong motors, especially in conjunction with "a reverse b" or "xy reverse ab" modes
             if ($a_b_reverse === "none") { // no reverse behaviour. Holding a turns A, holding b turns B.
-                output_values.A_out = $a_tracker ? 255 : 0;
-                output_values.B_out = $b_tracker ? 255 : 0;
+                output_values.A_out = ($a_tracker ? 255 : 0) * revA;
+                output_values.B_out = ($b_tracker ? 255 : 0) * revB;
             }else if ($a_b_reverse === "a reverses b") { // reverse behaviour. Holding a turns A and turns B in reverse. Holding b turns B and turns A in reverse.
-                output_values.A_out = ($a_tracker ? 255 : 0) + ($b_tracker ? -255 : 0);
-                output_values.B_out = ($b_tracker ? 255 : 0) + ($a_tracker ? -255 : 0);
+                output_values.A_out = (($a_tracker ? 255 : 0) + ($b_tracker ? -255 : 0)) * revA;
+                output_values.B_out = (($b_tracker ? 255 : 0) + ($a_tracker ? -255 : 0)) * revB;
             }else{ // gigareverse. Holding a turns A; b turns B. Holding x turns A in reverse. Holding y turns B in reverse.
-                output_values.A_out = ($a_tracker ? 255 : 0) + ($x_tracker ? -255 : 0);
-                output_values.B_out = ($b_tracker ? 255 : 0) + ($y_tracker ? -255 : 0);
+                output_values.A_out = (($a_tracker ? 255 : 0) + ($x_tracker ? -255 : 0)) * revA;
+                output_values.B_out = (($b_tracker ? 255 : 0) + ($y_tracker ? -255 : 0)) * revB;
                 // TODO: disable horn and servos in this case.
             }
         }
@@ -93,9 +96,6 @@
         output_values.X_out = $x_tracker ? 255 : 0;
         output_values.Y_out = $y_tracker ? 255 : 0; // TODO: fix errors with multitouch on these buttons in hold->xy/ab reverse mode
         // for some reason in that case specifically the buttons are mutually exclusive?
-
-        if ($reverse_A === true) {output_values.A_out *= -1;}
-        if ($reverse_B === true) {output_values.B_out *= -1;}
 
         websocket_manager.send_command(new PwmMessage(1, output_values.A_out))
         websocket_manager.send_command(new PwmMessage(2, output_values.B_out))

@@ -19,6 +19,9 @@
 
         if ($reverse_L === true) {L_out *= -1;}
         if ($reverse_R === true) {R_out *= -1;}
+
+        websocket_manager.send_command(new PwmMessage(3, L_out))
+        websocket_manager.send_command(new PwmMessage(4, R_out))
         // although this logic often results in outputs > 255, it makes total sense when clamped to 255 :D.
         // pushing u+r results in a "forward leaning right" motion where only one motor moves.
         // probably also worth testing: lessen 'spin speed' tied to l and r to make robots easier to control?

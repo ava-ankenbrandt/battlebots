@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { PwmMessage, websocket_manager } from '$lib/javascript/websocket_manager';
+    import { reverse_L, reverse_R } from "$lib/javascript/settingsStores";
 
     let isMounted = false;
     let x = 0;
@@ -8,6 +9,7 @@
     let outerdiv : HTMLElement;
     let isDragging = false;
 	let circd = 100;
+    let lastSendTime = 0;
 
     onMount(() => {
         x = outerdiv.clientWidth/2 - circd/2;
@@ -28,7 +30,15 @@
             let L_out = y_norm + x_norm;
             let R_out = y_norm - x_norm;
 
-            // todo: send websocket requests
+            if ($reverse_L === true) {L_out *= -1;}
+            if ($reverse_R === true) {R_out *= -1;}
+
+            const currentTime = Date.now();
+            if ((currentTime - lastSendTime > 16)) {
+                lastSendTime = currentTime;
+                websocket_manager.send_command(new PwmMessage(3, L_out))
+                websocket_manager.send_command(new PwmMessage(4, R_out))
+            }
         }else{
             handleMouseUp()
         }
@@ -44,7 +54,8 @@
         isDragging = false;
         x = outerdiv.clientWidth/2 - circd/2;
         y = outerdiv.clientWidth/2 - circd/2;
-        // todo: send websocket request to halt motors
+        websocket_manager.send_command(new PwmMessage(3, 0))
+        websocket_manager.send_command(new PwmMessage(4, 0))
     }
 </script>
 

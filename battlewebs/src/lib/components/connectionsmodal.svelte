@@ -1,6 +1,6 @@
 <script lang='ts'>
 	import Settingsmodalcheckbox from "./settingsmodalcheckbox.svelte";
-  import { reverse_A, reverse_B, reverse_L, reverse_R, switch_L_R_defs, reverse_SA, reverse_SB } from "$lib/javascript/settingsStores";
+  import { reverse_A, reverse_B, reverse_L, reverse_R, switch_L_R_defs, reverse_S1, reverse_S2 } from "$lib/javascript/settingsStores";
     export let connectionsOpen: boolean;
 </script>
 
@@ -14,8 +14,8 @@
       <Settingsmodalcheckbox title="Reverse A Motor" bind:checked={$reverse_A}/>
       <Settingsmodalcheckbox title="Reverse B Motor" bind:checked={$reverse_B}/>
       <Settingsmodalcheckbox title="Swap Left/Right Motor Outputs (for when right is plugged into left)" bind:checked={$switch_L_R_defs}/>
-      <Settingsmodalcheckbox title="Reverse Servo A Idle Position" bind:checked={$reverse_SA}/>
-      <Settingsmodalcheckbox title="Reverse Servo B Idle Position" bind:checked={$reverse_SB}/>
+      <Settingsmodalcheckbox title="Reverse Servo 1 Idle Position" bind:checked={$reverse_S1}/>
+      <Settingsmodalcheckbox title="Reverse Servo 2 Idle Position" bind:checked={$reverse_S2}/>
 
       
       <div class="modal-action">
