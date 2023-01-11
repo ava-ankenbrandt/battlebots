@@ -98,13 +98,13 @@
         output_values.Y_out = $y_tracker ? 255 : 0; // TODO: fix errors with multitouch on these buttons in hold->xy/ab reverse mode
         // for some reason in that case specifically the buttons are mutually exclusive?
 
-        let sa_max = $reverse_A ? 0 : 180;
-        let sa_min = $reverse_A ? 180 : 0;
-        let sb_max = $reverse_B ? 0 : 180;
-        let sb_min = $reverse_B ? 180 : 0;
+        let s1_max = $reverse_S1 ? 0 : 180;
+        let s1_min = $reverse_S1 ? 180 : 0;
+        let s2_max = $reverse_S2 ? 0 : 180;
+        let s2_min = $reverse_S2 ? 180 : 0;
         if ($a_b_reverse != "x/y reverses a/b") {
-            websocket_manager.send_command(new ServoMessage(1, (($x_tracker) ? sa_max : sa_min)));
-            websocket_manager.send_command(new ServoMessage(2, (($y_tracker) ? sb_max : sb_min)));
+            websocket_manager.send_command(new ServoMessage(1, (($x_tracker) ? s1_max : s1_min)));
+            websocket_manager.send_command(new ServoMessage(2, (($y_tracker) ? s2_max : s2_min)));
         }
 
         websocket_manager.send_command(new PwmMessage(1, output_values.A_out * revA))

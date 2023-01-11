@@ -144,7 +144,7 @@ export class WebsocketManager implements Readable<boolean> {
     this.isConnectedStore.set(false);
     setTimeout(() => {
       this.connect()
-    }, 30000);
+    }, 2000);
   }
 
   private on_message(e: WebSocketEventMap["message"]) {
