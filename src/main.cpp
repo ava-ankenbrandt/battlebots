@@ -180,6 +180,14 @@ void handlePWMMessage(int ch, int pwr) {
   }
 }
 
+void handleServoMessage(int ch, int ang) {
+  if (ch == 1) {
+    Ser1.write(ang);
+  }else if (ch == 2) {
+    Ser2.write(ang);
+  }
+}
+
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
@@ -203,9 +211,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       case 'P': // PWM!
         handlePWMMessage(parameter1, parameter2 - 255);
         break;
-
       case 'S': // servo control!
-
+        handleServoMessage(parameter1, parameter2);
         break;
       case 'N': // play a note!
         handleNoteMessage(parameter1);
