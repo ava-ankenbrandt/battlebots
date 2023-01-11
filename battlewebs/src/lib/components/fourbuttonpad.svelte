@@ -3,10 +3,10 @@
 	import type { HtmlTag } from "svelte/internal";
 	import Fourbuttonpadbutton from "./fourbuttonpadbutton.svelte";
 
-    import { reverse_A, reverse_B, a_b_mode, a_b_reverse, servo_mode } from "$lib/javascript/settingsStores";
+    import { reverse_A, reverse_B, a_b_mode, a_b_reverse, servo_mode, reverse_S1, reverse_S2 } from "$lib/javascript/settingsStores";
     // please remember that capital A and B are outputs and lowercase a and b are buttons
 
-	import { PwmMessage, websocket_manager } from '$lib/javascript/websocket_manager';
+	import { PwmMessage, ServoMessage, websocket_manager } from '$lib/javascript/websocket_manager';
 
     let x_tracker = new ButtonTracker("X")
     let y_tracker = new ButtonTracker("Y")
@@ -61,35 +61,36 @@
 
     $:{
 
-        let revA = $reverse_A ? -1 : 0;
-        let revB = $reverse_B ? -1 : 0;
+        let revA = $reverse_A ? -1 : 1;
+        let revB = $reverse_B ? -1 : 1;
 
         if ($a_b_mode === "toggle") { // default mode. Assumes you'll want to turn a motor on and leave it on.
 
             if ($a_b_reverse === "none") {
                 if ($a_tracker === true) {
                     last_A_state = !last_A_state;
-                    output_values.A_out = (last_A_state ? 255 : 0) * revA;
+                    output_values.A_out = (last_A_state ? 255 : 0);
                 }
                 if ($b_tracker === true) {
                     last_B_state = !last_B_state
-                    output_values.B_out = (last_B_state ? 255 : 0) * revB;
+                    output_values.B_out = (last_B_state ? 255 : 0);
                 }
             }
 
         }else{ // hold mode. Hold down button to move motor. Useful for strong motors, especially in conjunction with "a reverse b" or "xy reverse ab" modes
             if ($a_b_reverse === "none") { // no reverse behaviour. Holding a turns A, holding b turns B.
-                output_values.A_out = ($a_tracker ? 255 : 0) * revA;
-                output_values.B_out = ($b_tracker ? 255 : 0) * revB;
+                output_values.A_out = ($a_tracker ? 255 : 0);
+                output_values.B_out = ($b_tracker ? 255 : 0);
             }else if ($a_b_reverse === "a reverses b") { // reverse behaviour. Holding a turns A and turns B in reverse. Holding b turns B and turns A in reverse.
-                output_values.A_out = (($a_tracker ? 255 : 0) + ($b_tracker ? -255 : 0)) * revA;
-                output_values.B_out = (($b_tracker ? 255 : 0) + ($a_tracker ? -255 : 0)) * revB;
+                output_values.A_out = (($a_tracker ? 255 : 0) + ($b_tracker ? -255 : 0));
+                output_values.B_out = (($b_tracker ? 255 : 0) + ($a_tracker ? -255 : 0));
             }else{ // gigareverse. Holding a turns A; b turns B. Holding x turns A in reverse. Holding y turns B in reverse.
-                output_values.A_out = (($a_tracker ? 255 : 0) + ($x_tracker ? -255 : 0)) * revA;
-                output_values.B_out = (($b_tracker ? 255 : 0) + ($y_tracker ? -255 : 0)) * revB;
+                output_values.A_out = (($a_tracker ? 255 : 0) + ($x_tracker ? -255 : 0));
+                output_values.B_out = (($b_tracker ? 255 : 0) + ($y_tracker ? -255 : 0));
                 // TODO: disable horn and servos in this case.
             }
         }
+
         console.log("--")
         console.log(output_values);
 
@@ -97,8 +98,17 @@
         output_values.Y_out = $y_tracker ? 255 : 0; // TODO: fix errors with multitouch on these buttons in hold->xy/ab reverse mode
         // for some reason in that case specifically the buttons are mutually exclusive?
 
-        websocket_manager.send_command(new PwmMessage(1, output_values.A_out))
-        websocket_manager.send_command(new PwmMessage(2, output_values.B_out))
+        let sa_max = $reverse_A ? 0 : 180;
+        let sa_min = $reverse_A ? 180 : 0;
+        let sb_max = $reverse_B ? 0 : 180;
+        let sb_min = $reverse_B ? 180 : 0;
+        if ($a_b_reverse != "x/y reverses a/b") {
+            websocket_manager.send_command(new ServoMessage(1, (($x_tracker) ? sa_max : sa_min)));
+            websocket_manager.send_command(new ServoMessage(2, (($y_tracker) ? sb_max : sb_min)));
+        }
+
+        websocket_manager.send_command(new PwmMessage(1, output_values.A_out * revA))
+        websocket_manager.send_command(new PwmMessage(2, output_values.B_out * revB))
 
     }
     

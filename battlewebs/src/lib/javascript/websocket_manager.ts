@@ -16,7 +16,7 @@ import { writable, type Readable, type Writable } from "svelte/store";
 export const message_types = {
   WATCHDOG: "W",
   PWM: "P",
-  SERVO_CONTROL: "S",
+  SERVO: "S",
   NOTE: "N"
 } as const
 
@@ -59,6 +59,32 @@ export class PwmMessage implements Message { // TODO: check setting and *-1 if i
 
   get type(): MessageTypes {
     return "PWM"
+  }
+}
+
+export class ServoMessage implements Message { // TODO: check setting and *-1 if it's set
+  private angle: string;
+  private channel_id: string;
+
+  constructor(channel_id: number, angle: number)
+  {
+    if (angle > 180) {angle = 180;}
+    if (angle < 0) { angle = 0;}
+    if (!Number.isInteger(angle)) {
+      angle = Math.round(angle);
+    }
+    
+
+    this.angle = angle.toString().padStart(3, '0');
+    this.channel_id = channel_id.toString().padStart(2, '0');
+  }
+
+  to_string(): string {
+    return `S${this.channel_id} A${this.angle}`
+  }
+
+  get type(): MessageTypes {
+    return "SERVO"
   }
 }
 

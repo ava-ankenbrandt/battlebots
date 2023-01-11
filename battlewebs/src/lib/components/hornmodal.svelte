@@ -3,6 +3,10 @@
     export let hornOpen: boolean;
     let notes = ['C','D','E','F','G','A','B','C','D','E','F','G','A','B','C'];
     
+    function playSound(noteID: number) {
+        websocket_manager.send_command(new HornMessage(noteID));
+    }
+
     function stopSound() {
         websocket_manager.send_command(new HornMessage(0));
     }
@@ -14,7 +18,7 @@
         <br>
         <div class="grid grid-cols-5 gap-4">
             {#each Array(15) as _, index (index)}
-		        <button class='btn btn-primary' on:click={() => {websocket_manager.send_command(new HornMessage(index+1))}} on:pointerup={() => {stopSound()}} on:pointerleave={() => {stopSound()}}>{notes[index]}</button>
+		        <button class='aspect-square rounded-lg btn-primary' on:pointerdown={() => {playSound(index+1)}} on:pointerup={() => {stopSound()}} on:pointerleave={() => {stopSound()}}>{notes[index]}</button>
 	        {/each}
         </div>
         <div class="modal-action">

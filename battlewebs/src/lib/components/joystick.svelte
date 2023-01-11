@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { PwmMessage, websocket_manager } from '$lib/javascript/websocket_manager';
-    import { reverse_L, reverse_R } from "$lib/javascript/settingsStores";
+    import { reverse_L, reverse_R, switch_L_R_defs } from "$lib/javascript/settingsStores";
 
     let isMounted = false;
     let x = 0;
@@ -30,14 +30,17 @@
             let L_out = y_norm + x_norm;
             let R_out = y_norm - x_norm;
 
-            if ($reverse_L === true) {L_out *= -1;}
-            if ($reverse_R === true) {R_out *= -1;}
+            let revL = $reverse_L ? -1 : 1;
+            let revR = $reverse_R ? -1 : 1;
+
+            let Lchannel = $switch_L_R_defs ? 4 : 3;
+            let Rchannel = $switch_L_R_defs ? 3 : 4;
 
             const currentTime = Date.now();
             if ((currentTime - lastSendTime > 16)) {
                 lastSendTime = currentTime;
-                websocket_manager.send_command(new PwmMessage(3, L_out))
-                websocket_manager.send_command(new PwmMessage(4, R_out))
+                websocket_manager.send_command(new PwmMessage(Lchannel, L_out * revL))
+                websocket_manager.send_command(new PwmMessage(Rchannel, R_out * revR))
             }
         }else{
             handleMouseUp()

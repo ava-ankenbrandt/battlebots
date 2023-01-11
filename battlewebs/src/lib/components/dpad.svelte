@@ -1,7 +1,7 @@
 <script lang='ts'>
     import { ButtonTracker } from "$lib/javascript/buttonTracker";
 	import { PwmMessage, websocket_manager } from '$lib/javascript/websocket_manager';
-    import { reverse_L, reverse_R } from "$lib/javascript/settingsStores";
+    import { reverse_L, reverse_R, switch_L_R_defs } from "$lib/javascript/settingsStores";
 
     let u_tracker = new ButtonTracker("up")
     let d_tracker = new ButtonTracker("down")
@@ -14,14 +14,20 @@
     let turn_max = 128;
 
     $:{
+        let revL = $reverse_L ? -1 : 1;
+        let revR = $reverse_R ? -1 : 1;
+
+        let Lchannel = $switch_L_R_defs ? 4 : 3;
+        let Rchannel = $switch_L_R_defs ? 3 : 4;
+
         L_out = ($u_tracker ? fwd_max : 0) + ($l_tracker ? -turn_max : 0) + ($r_tracker ? turn_max : 0) + ($d_tracker ? -fwd_max : 0);
         R_out = ($u_tracker ? fwd_max : 0) + ($l_tracker ? turn_max : 0) + ($r_tracker ? -turn_max : 0) + ($d_tracker ? -fwd_max : 0);
 
         if ($reverse_L === true) {L_out *= -1;}
         if ($reverse_R === true) {R_out *= -1;}
 
-        websocket_manager.send_command(new PwmMessage(3, L_out))
-        websocket_manager.send_command(new PwmMessage(4, R_out))
+        websocket_manager.send_command(new PwmMessage(Lchannel, L_out * revL))
+        websocket_manager.send_command(new PwmMessage(Rchannel, R_out * revR))
         // although this logic often results in outputs > 255, it makes total sense when clamped to 255 :D.
         // pushing u+r results in a "forward leaning right" motion where only one motor moves.
         // probably also worth testing: lessen 'spin speed' tied to l and r to make robots easier to control?

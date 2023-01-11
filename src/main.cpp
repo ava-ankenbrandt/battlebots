@@ -43,7 +43,7 @@ int ser2PressTime = 0;
 // bool ser4WaitingForOff = false;
 // bool ser4PressTime = 0;
 #define HornC 15
-#define OCTS 3
+#define OCTS 4
 int hornDict[16][2] = {{0,0},{NOTE_C, OCTS},{NOTE_D, OCTS},{NOTE_E, OCTS},{NOTE_F, OCTS},{NOTE_G, OCTS},{NOTE_A, OCTS},{NOTE_B, OCTS},
 {NOTE_C, OCTS+1},{NOTE_D, OCTS+1},{NOTE_E, OCTS+1},{NOTE_F, OCTS+1},{NOTE_G, OCTS+1},{NOTE_A, OCTS+1},{NOTE_B, OCTS+1},{NOTE_C, OCTS+2}};
 
@@ -109,12 +109,13 @@ void driveMotor(int pin1, int pin2, int pwm) {
 }
 
 void stopHorn() {
-  ledcWriteTone(HornC, 0);
+  ledcWrite(HornC, 0);
 }
 
 void handleNoteMessage(int webNote) { // webnotes aren't notes. We have to convert them to the ledc format.
   if (webNote == 0) {
     stopHorn();
+    return;
   }
   int note = hornDict[webNote][0];
   int oct = hornDict[webNote][1];
@@ -185,8 +186,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     data[len] = 0;
     incomingMsg = (char*)data;
     Serial.println(incomingMsg);
-    Serial.print("robot enabled? ");
-    Serial.println(robotEnabled);
     char msgType = incomingMsg.charAt(0);
 
     if (msgType == 'W') {
