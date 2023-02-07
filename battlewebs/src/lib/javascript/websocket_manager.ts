@@ -3,10 +3,10 @@
  * 
  * There are 4 types of signals being sent:
  * 1. Watchdog `W` - every x seconds. If wathdog is missed for some time, turn everything off
- * 2. PWM `P<channel_id> V<power, -255:255>` - PWM signal for a specific channel.
+ * 2. PWM `P<channel_id> V<power, 000:512>` - PWM signal for a specific channel. Biased around 255, so 000 -> -255, 255 -> 0, 512 -> 255
  *      L: 1, R: 2, A: 3, B: 4
  *      Positive is forward, negative is backwards.
- * 3. Servo Control `S<channel_id> A<0-180 degrees>` - Servo control value
+ * 3. Servo Control `S<channel_id> A<000-180 degrees>` - Servo control value
  * 4. Note `N<tone, 01-15, 00 is no sound> - A single note. These are played live as they're received.
  *      if the watchdog times out, sound stops.
  */

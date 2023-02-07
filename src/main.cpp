@@ -49,7 +49,7 @@ int hornDict[16][2] = {{0,0},{NOTE_C, OCTS},{NOTE_D, OCTS},{NOTE_E, OCTS},{NOTE_
 
 
 // Replace with your network credentials
-const char* ssid = "Pluto Nero";
+const char* ssid = "Tortilla Terror";
 const char* password = "megafish";
 IPAddress IP = IPAddress(10, 10, 1, 1);
 IPAddress gateway = IPAddress(10, 10, 1, 1);
@@ -82,10 +82,6 @@ void initWiFi() {
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(IP, IP, NMask);
   WiFi.softAP(ssid);
-}
-
-void notifyClients(String sliderValues) {
-  ws.textAll(sliderValues);
 }
 
 // note that these are PWM CHANNEL pins

@@ -8,7 +8,7 @@
     <div class="modal-box relative max-w-[90%] w-full">
       <h1 class="font-bold text-2xl text-center">Connections</h1>
       <br>
-      
+      <p>This page is temporary! Things to remember: outputs are ABLR left to right; power port is next to the LED with red closer to the LED :)</p>
       <Settingsmodalcheckbox title="Reverse Left Motor" bind:checked={$reverse_L}/>
       <Settingsmodalcheckbox title="Reverse Right Motor" bind:checked={$reverse_R}/>
       <Settingsmodalcheckbox title="Reverse A Motor" bind:checked={$reverse_A}/>

@@ -23,9 +23,6 @@
         L_out = ($u_tracker ? fwd_max : 0) + ($l_tracker ? -turn_max : 0) + ($r_tracker ? turn_max : 0) + ($d_tracker ? -fwd_max : 0);
         R_out = ($u_tracker ? fwd_max : 0) + ($l_tracker ? turn_max : 0) + ($r_tracker ? -turn_max : 0) + ($d_tracker ? -fwd_max : 0);
 
-        if ($reverse_L === true) {L_out *= -1;}
-        if ($reverse_R === true) {R_out *= -1;}
-
         websocket_manager.send_command(new PwmMessage(Lchannel, L_out * revL))
         websocket_manager.send_command(new PwmMessage(Rchannel, R_out * revR))
         // although this logic often results in outputs > 255, it makes total sense when clamped to 255 :D.
