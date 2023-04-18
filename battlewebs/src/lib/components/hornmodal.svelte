@@ -13,16 +13,16 @@
 </script>
 
 <div class="modal" class:modal-open={hornOpen}>
-    <div class="modal-box relative max-w-[90%] w-full">
+    <div class="modal-box relative max-w-[90%] h-[80%] w-full flex flex-col">
         <h1 class="font-bold text-2xl text-center">Configure Horn</h1>
         <br>
-        <div class="grid grid-cols-5 gap-4">
+        <div class="grid grid-cols-5 gap-4 flex-grow">
             {#each Array(15) as _, index (index)}
-		        <button class='aspect-square rounded-lg btn-primary' on:pointerdown={() => {playSound(index+1)}} on:pointerup={() => {stopSound()}} on:pointerleave={() => {stopSound()}}>{notes[index]}</button>
+		        <button class='rounded-lg btn-primary select-none' on:pointerdown={() => {playSound(index+1)}} on:pointerup={() => {stopSound()}} on:pointerleave={() => {stopSound()}}>{notes[index]}</button>
 	        {/each}
         </div>
         <div class="modal-action">
-            <button class="btn btn-md absolute left-2 top-2" on:click={()=>hornOpen = false}>Back</button>
+            <button class="btn btn-md absolute left-2 top-2 select-none" on:click={()=>hornOpen = false}>Back</button>
         </div>
     </div>
 </div>

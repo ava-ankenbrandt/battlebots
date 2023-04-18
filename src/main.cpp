@@ -49,7 +49,7 @@ int hornDict[16][2] = {{0,0},{NOTE_C, OCTS},{NOTE_D, OCTS},{NOTE_E, OCTS},{NOTE_
 
 
 // Replace with your network credentials
-const char* ssid = "Tortilla Terror";
+const char* ssid = "Theudemor Zorka";
 const char* password = "megafish";
 IPAddress IP = IPAddress(10, 10, 1, 1);
 IPAddress gateway = IPAddress(10, 10, 1, 1);
@@ -258,7 +258,7 @@ void setupPinModes() {
   ledcAttachPin(B1a, B1C);
   ledcAttachPin(B2, B2C);
 
-  ledcAttachPin(S4, HornC);
+  ledcAttachPin(S3, HornC);
 
   Ser1.attach(S1,8);
   Ser2.attach(S2,9);
